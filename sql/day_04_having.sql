@@ -117,7 +117,8 @@ HAVING COUNT(prompt_id) > (
         FROM prompts
         GROUP BY topic
     ) AS prompt_avg
-) ORDER BY prompt_count DESC;
+) 
+ORDER BY prompt_count DESC;
 -- answer: shopping, news, relationships, and health are the above avg prompt topics
 
 -- Problem 7: rewrite problem 6 as a CTE
@@ -125,8 +126,6 @@ HAVING COUNT(prompt_id) > (
 -- CTE's are like table variables, they create a smaller table and you can reference
 -- note that they only exist for the single statement its in. cannot reference later
 WITH topic_count AS (
-    -- add subquery
-    -- using prompt_count since it is re-written a couple times in previous problem
     SELECT COUNT(prompt_id) AS prompt_count, topic
     FROM prompts
     GROUP BY topic
@@ -144,8 +143,7 @@ ORDER BY prompt_count;
 -- answer: health, relationships, news, shopping
 
 -- Problem 8: how many flags come from pro users?
--- list the user_ids of pro users (innermost layer)
--- step 1: find which table will show the pro users
+-- step 1: list the user_ids of pro users (innermost layer)
 SELECT user_id
 FROM users
 WHERE plan = 'pro';
@@ -159,6 +157,7 @@ WHERE user_id IN (
     FROM users
     WHERE plan = 'pro'
 );
+-- answer: 136 flag rows (135 distinct, one planted duplicate is a pro user's)
 
 -- step 3: create the outer query
 SELECT COUNT(flag_id) AS flag_pro_users
@@ -172,6 +171,7 @@ WHERE prompt_id IN (
         WHERE plan = 'pro'
     )
 );
+-- answer: 110 uses, user 36 has the most 
 
 -- Problem 9: rewrite "users with more prompts than the avg user" as CTE
 -- two variables to find: the prompt count for each user and the avg prompt count across all users

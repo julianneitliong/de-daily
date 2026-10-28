@@ -1,4 +1,4 @@
--- Day 5 (part 1): joins and set operations
+-- Day 5: assessment review set (part 1: joins and set operations, part 2: data quality)
 -- run: python python/run_sql.py sql/day_05_assessment_review.sql
 DESCRIBE users;
 DESCRIBE prompts;
@@ -106,3 +106,82 @@ ON u.user_id = p.user_id;
 -- 200 = how many users (each counted once). 
 -- 1963 = how many rows the join made (one per prompt with a user)
 
+-- B: quality and validation
+-- B1: how many prompts have a missing user_id?
+SELECT COUNT(*) AS missing_users
+FROM prompts
+WHERE user_id IS NULL;
+-- answer: 37
+
+SELECT COUNT(*) - COUNT(user_id) AS missing_users
+FROM prompts;
+-- answer: 37
+-- note: you can use math operators in select statements
+
+-- B2: how many flags are dated in the future?
+SELECT COUNT(flagged_at) AS future_dated
+FROM flags
+WHERE flagged_at > CURRENT_DATE;
+-- answer: 9 (current date is 10-27-2026)
+
+-- B3: were any flags created before the prompt they flag?
+-- prompts holds the created_at timestamp
+-- flags holds the flagged_at timestamp
+SELECT f.flag_id, f.flagged_at, p.created_at
+FROM flags AS f
+JOIN prompts AS p USING (prompt_id)
+WHERE f.flagged_at < p.created_at;
+-- answer: 0 rows, check passes: every flag is dated after its prompt
+
+-- B4: write one query for each, returning a count of bad rows
+-- 1. flag whose severity is not 1, 2, or 3
+-- severity is in flags table
+SELECT COUNT(flag_id) AS bad_severity
+FROM flags
+WHERE severity NOT IN (1,2,3) OR severity IS NULL;
+-- answer: 0, check passes
+
+-- 2. users whose country code isn't exactly 2 characters length
+SELECT COUNT(*) AS bad_countries
+FROM users
+WHERE LENGTH(country) <> 2;
+-- answer: 0, check passes
+
+-- 3. users whose plan is something other than 'free' or 'pro'
+SELECT COUNT(*) AS bad_plans
+FROM users
+WHERE plan NOT IN ('free','pro');
+-- answer: 0, check passes
+
+-- B5: in one query, show: total rows, distinct flag_ids, and the number of extra rows
+SELECT COUNT(*) AS total_rows,
+COUNT(DISTINCT flag_id) AS distinct_flag_ids,
+COUNT(flag_id) - COUNT(DISTINCT flag_id) AS extra_rows
+FROM flags;
+-- answer: total_rows 313, distinct: 310, extra: 3
+
+-- B6. count the users who never wrote a prompt, using WHERE user_id NOT IN
+-- one number = count(*)
+-- v1
+SELECT COUNT(*) AS users_wo_prompts
+FROM users
+WHERE user_id NOT IN (
+    SELECT user_id
+    FROM prompts
+);
+-- output is 0, only because the nulls in the list make every NOT IN check unknown.
+-- it would be 0 even if some users had no prompts
+
+-- v2
+-- remove null values in subquery
+SELECT COUNT(*) AS users_wo_prompts
+FROM users
+WHERE user_id NOT IN (
+    SELECT user_id
+    FROM prompts
+    WHERE user_id IS NOT NULL
+);
+-- output is 0: every user wrote at least one prompt (matches A7's 200 users)
+-- v2 is the only one to trust since it removes the null values
+-- never use not in on a column that can be null without filtering the nulls out inside
+-- the subquery first

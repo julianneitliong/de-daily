@@ -7,3 +7,4 @@
 - Day 4: practiced HAVING, finding duplicate rows, scalar subqueries, CTEs, and nested IN subqueries in sql/day_04_having.sql. Learned: AVG can't go in WHERE, so calculate it separately and compare.
 - Day 5 (part 1): joins and set operations (anti-join, USING, EXCEPT, UNION vs UNION ALL, INTERSECT). Learned: UNION ALL keeps duplicates across lists, and UNION removes them.
 - Day 5 (part 2): data quality checks (NULL counts, future dates, range and length checks, row-count reconciliation, the NOT IN NULL trap). Learned: NOT IN with a NULL in the list returns nothing, so filter NULLs inside the subquery.
+- Day 5 (part 3): extracting and aggregating (LIKE vs ILIKE, CASE labels, conditional counts with FILTER, WHERE + HAVING with a date filter). Learned: CASE is a block (WHEN ... THEN ... ELSE ... END), not a function.

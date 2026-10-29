@@ -1,4 +1,4 @@
--- Day 5: assessment review set (part 1: joins and set operations, part 2: data quality)
+-- Day 5: assessment review set (part 1: joins and set operations, part 2: data quality, part 3: extracting and aggregating)
 -- run: python python/run_sql.py sql/day_05_assessment_review.sql
 DESCRIBE users;
 DESCRIBE prompts;
@@ -185,3 +185,68 @@ WHERE user_id NOT IN (
 -- v2 is the only one to trust since it removes the null values
 -- never use not in on a column that can be null without filtering the nulls out inside
 -- the subquery first
+
+-- C. Extracting and aggregating
+-- C1. count prompts whose topic starts with "h"
+
+-- with LIKE 'h%'
+SELECT COUNT(*)
+FROM prompts
+WHERE topic LIKE 'h%';
+-- answer: total 651
+
+-- with LIKE 'H%'
+SELECT COUNT(*)
+FROM prompts
+WHERE topic LIKE 'H%';
+-- answer: total 0, this is because it is case sensitive
+
+-- with ILIKE 'H%'
+SELECT COUNT(*)
+FROM prompts
+WHERE topic ILIKE 'H%';
+-- answer: total 651, ignores case-sensitivity
+
+-- C2. label each flag low (1), medium (2), or high (3) then count flags per label
+-- first, check the range of values for severity
+SELECT COUNT(*) AS sev_count, severity
+FROM flags
+GROUP BY severity
+ORDER BY sev_count DESC;
+
+-- remember, case is not a function, its a block with its own key words
+-- use case to replace
+SELECT 
+    CASE
+        WHEN severity = 1 THEN 'low'
+        WHEN severity = 2 THEN 'medium'
+        WHEN severity = 3 THEN 'high'
+        ELSE 'unknown'
+    END AS severity_label, -- this is the name of the case
+    COUNT(*) AS flag_count -- this is the name of the count
+FROM flags
+GROUP BY severity_label
+ORDER BY flag_count;
+-- answer: high 96, medium 106, low 111
+
+-- C3. count high-severity flags per category
+-- one row per category, with 2 columns: total flags and how many of those have sev 3
+SELECT
+    category,
+    COUNT(*) AS total_flags,
+    COUNT(*) FILTER (WHERE severity = 3) AS sev_3 -- no need for 
+FROM flags
+GROUP BY category
+ORDER BY total_flags DESC;
+-- answer (category, total, sev3): spam 69/22, pii 78/20, harmful 81/31, off_topic 85/23
+
+-- C4: among the prompts written in 2025-H2 (july 1 onward),
+-- which topics have more than 165 prompts?
+SELECT topic, COUNT(*) AS prompt_count
+FROM prompts
+WHERE created_at >= '2025-07-01' -- remember, you can compare dates with timestamps
+GROUP BY topic
+HAVING COUNT(topic) > 165;
+-- answer: news 180, shopping 167, coding 170
+
+
